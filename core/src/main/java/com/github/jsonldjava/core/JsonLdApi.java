@@ -2185,15 +2185,50 @@ public class JsonLdApi {
      *             If there was an error while normalizing.
      */
     public Object normalize(Map<String, Object> dataset) throws JsonLdError {
+        return normalize(dataset, opts);
+    }
+
+    /**
+     * Performs RDF normalization on the given JSON-LD input.
+     *
+     * @param dataset
+     *            the expanded JSON-LD object to normalize.
+     * @param options
+     *            the JSON-LD options containing the algorithm to use.
+     * @return The normalized JSON-LD object
+     * @throws JsonLdError
+     *             If there was an error while normalizing.
+     */
+    public Object normalize(Map<String, Object> dataset, JsonLdOptions options) throws JsonLdError {
+        if (options.getAlgorithm().equals(JsonLdOptions.URGNA2012)) {
+            return normalizeURGN2012(dataset);
+        } else if (options.getAlgorithm().equals(JsonLdOptions.URDNA2015)) {
+            return normalizeURDNA2015(dataset, options);
+        }
+
+        return null;
+    }
+
+    /**
+     * Normalizes using the URGNA2012 algorithm.
+     *
+     * @param dataset
+     *            the expanded JSON-LD object to normalize.
+     * @return The normalized JSON-LD object
+     * @throws JsonLdError
+     *             If there was an error while normalizing.
+     */
+    public Object normalizeURGN2012(Map<String, Object> dataset) throws JsonLdError {
         // create quads and map bnodes to their associated quads
         final List<Object> quads = new ArrayList<Object>();
         final Map<String, Object> bnodes = newMap();
+
         for (String graphName : dataset.keySet()) {
-            final List<Map<String, Object>> triples = (List<Map<String, Object>>) dataset
-                    .get(graphName);
+            final List<Map<String, Object>> triples = (List<Map<String, Object>>) dataset.get(graphName);
             if (JsonLdConsts.DEFAULT.equals(graphName)) {
                 graphName = null;
             }
+
             for (final Map<String, Object> quad : triples) {
                 if (graphName != null) {
                     if (graphName.indexOf("_:") == 0) {
@@ -2212,10 +2247,9 @@ public class JsonLdApi {
 
                 final String[] attrs = new String[] { "subject", "object", "name" };
                 for (final String attr : attrs) {
-                    if (quad.containsKey(attr) && "blank node"
-                            .equals(((Map<String, Object>) quad.get(attr)).get("type"))) {
-                        final String id = (String) ((Map<String, Object>) quad.get(attr))
-                                .get("value");
+                    if (quad.containsKey(attr)
+                            && "blank node".equals(((Map<String, Object>) quad.get(attr)).get("type"))) {
+                        final String id = (String) ((Map<String, Object>) quad.get(attr)).get("value");
                         if (!bnodes.containsKey(id)) {
                             bnodes.put(id, new LinkedHashMap<String, List<Object>>() {
                                 {
@@ -2223,17 +2257,30 @@ public class JsonLdApi {
                                 }
                             });
                         }
-                        ((List<Object>) ((Map<String, Object>) bnodes.get(id)).get("quads"))
-                                .add(quad);
+                        ((List<Object>) ((Map<String, Object>) bnodes.get(id)).get("quads")).add(quad);
                     }
                 }
             }
         }
 
         // mapping complete, start canonical naming
-        final NormalizeUtils normalizeUtils = new NormalizeUtils(quads, bnodes,
-                new UniqueNamer("_:c14n"), opts);
+        final NormalizeUtils normalizeUtils = new NormalizeUtils(quads, bnodes, new UniqueNamer("_:c14n"), opts);
         return normalizeUtils.hashBlankNodes(bnodes.keySet());
+    }
+
+    /**
+     * Normalizes using the URDNA2015 algorithm.
+     *
+     * @param dataset
+     *            the expanded JSON-LD object to normalize.
+     * @param options
+     *            the JSON-LD options to use.
+     * @return The normalized JSON-LD object
+     * @throws JsonLdError
+     *             If there was an error while normalizing.
+     */
+    public Object normalizeURDNA2015(Map<String, Object> dataset, JsonLdOptions options) throws JsonLdError {
+        return new Urdna2015(dataset, options).normalize();
     }
 
 }
