@@ -18,6 +18,10 @@ public class JsonLdOptions {
 
     public static final boolean DEFAULT_COMPACT_ARRAYS = true;
 
+    // Normalization algorithm constants
+    public static final String URGNA2012 = "URGNA2012";
+    public static final String URDNA2015 = "URDNA2015";
+
     /**
      * Constructs an instance of JsonLdOptions using an empty base.
      */
@@ -61,6 +65,7 @@ public class JsonLdOptions {
         copy.setUseRdfType(useRdfType);
         copy.setUseNativeTypes(useNativeTypes);
         copy.setProduceGeneralizedRdf(produceGeneralizedRdf);
+        copy.setAlgorithm(algorithm);
         copy.format = format;
         copy.useNamespaces = useNamespaces;
         copy.outputForm = outputForm;
@@ -109,6 +114,9 @@ public class JsonLdOptions {
     Boolean useRdfType = false;
     Boolean useNativeTypes = false;
     private boolean produceGeneralizedRdf = false;
+
+    // Normalization algorithm option
+    private String algorithm = URGNA2012;
 
     public String getEmbed() {
         switch (this.embed) {
@@ -292,6 +300,14 @@ public class JsonLdOptions {
 
     public void setDocumentLoader(DocumentLoader documentLoader) {
         this.documentLoader = documentLoader;
+    }
+
+    public String getAlgorithm() {
+        return algorithm;
+    }
+
+    public void setAlgorithm(String algorithm) {
+        this.algorithm = algorithm;
     }
 
     // TODO: THE FOLLOWING ONLY EXIST SO I DON'T HAVE TO DELETE A LOT OF CODE,

@@ -480,6 +480,85 @@ class NormalizeUtils {
     }
 
     /**
+     * Helper methods for URDNA2015 algorithm
+     */
+
+    /**
+     * Sorts map keys and returns them as a list
+     */
+    public static List<String> sortMapKeys(Map<String, ?> map) {
+        List<String> keyList = new ArrayList<>(map.keySet());
+        Collections.sort(keyList);
+        return keyList;
+    }
+
+    /**
+     * Sorts a list of maps by their keys
+     */
+    public static List<Map<String, Object>> sortMapList(List<Map<String, Object>> mapList) {
+        return sortMapList(mapList, true);
+    }
+
+    /**
+     * Sorts a list of maps by their keys, with optional recursion
+     */
+    public static List<Map<String, Object>> sortMapList(List<Map<String, Object>> mapList, boolean recursion) {
+        List<Map<String, Object>> sortedMapsList = new ArrayList<>();
+        for (Map<String, Object> map : mapList) {
+            Map<String, Object> newMap = new LinkedHashMap<>();
+            List<String> keyList = new ArrayList<>(map.keySet());
+            Collections.sort(keyList);
+
+            for (String key : keyList) {
+                newMap.put(key, map.get(key));
+            }
+            sortedMapsList.add(newMap);
+        }
+        if (recursion) {
+            return sortMapList(sortedMapsList, false);
+        }
+        return sortedMapsList;
+    }
+
+    /**
+     * SHA-256 hash for a list of N-Quads strings
+     */
+    public static String sha256HashnQuads(List<String> nquads) {
+        StringBuilder stringToHash = new StringBuilder();
+        for (String nquad : nquads) {
+            stringToHash.append(nquad);
+        }
+        return sha256Hash(stringToHash.toString().getBytes());
+    }
+
+    /**
+     * SHA-256 hash for a string
+     */
+    public static String sha256Hash(String string) {
+        return sha256Hash(string.getBytes());
+    }
+
+    /**
+     * SHA-256 hash for byte array
+     */
+    public static String sha256Hash(byte[] bytes) {
+        return encodeHex(sha256Raw(bytes));
+    }
+
+    /**
+     * SHA-256 raw hash for byte array
+     */
+    public static byte[] sha256Raw(byte[] bytes) {
+        try {
+            MessageDigest sha = MessageDigest.getInstance("SHA-256");
+            sha.update(bytes);
+            return sha.digest();
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    /**
      * A helper function that gets the blank node name from an RDF quad node
      * (subject or object). If the node is a blank node and its value does not
      * match the given blank node ID, it will be returned.
@@ -498,7 +577,7 @@ class NormalizeUtils {
                         : null;
     }
 
-    private static class Permutator {
+    public static class Permutator {
 
         private final List<String> list;
         private boolean done;

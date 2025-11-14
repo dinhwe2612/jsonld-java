@@ -2231,9 +2231,17 @@ public class JsonLdApi {
         }
 
         // mapping complete, start canonical naming
-        final NormalizeUtils normalizeUtils = new NormalizeUtils(quads, bnodes,
-                new UniqueNamer("_:c14n"), opts);
-        return normalizeUtils.hashBlankNodes(bnodes.keySet());
+        // Check which normalization algorithm to use
+        if (JsonLdOptions.URDNA2015.equals(opts.getAlgorithm())) {
+            // Use URDNA2015 algorithm
+            final Urdna2015 urdna2015 = new Urdna2015(dataset, opts);
+            return urdna2015.normalize();
+        } else {
+            // Use default URGNA2012 algorithm (existing implementation)
+            final NormalizeUtils normalizeUtils = new NormalizeUtils(quads, bnodes,
+                    new UniqueNamer("_:c14n"), opts);
+            return normalizeUtils.hashBlankNodes(bnodes.keySet());
+        }
     }
 
 }
